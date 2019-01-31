@@ -1,0 +1,57 @@
+version: "3"
+services:
+
+  nginx:
+    container_name: tweety_nginx
+    build: ./build/nginx
+    volumes:
+      - "../tweety:/www"
+    ports:
+      - "80:80"
+    links:
+      - php-fpm
+
+  php-fpm:
+    container_name: tweety_php
+    build: ./build/php-fpm
+    volumes:
+      - "../tweety:/www"
+    links:
+      - mysql
+      - redis
+      - smtp
+
+  mysql:
+    container_name: tweety_mysql
+    image: mysql:5.7
+    command: "--default-authentication-plugin=mysql_native_password"
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: tweety
+      MYSQL_PASSWORD: tweety
+      MYSQL_DATABASE: tweety
+
+  redis:
+    container_name: tweety_redis
+    image: redis:4.0-alpine
+
+  workspace:
+    container_name: tweety_workspace
+    build: ./build/workspace
+    volumes:
+      - "../tweety:/www"
+    working_dir: /www
+    links:
+      - mysql
+      - redis
+
+  smtp:
+    container_name: tweety_smtp
+    image: djfarrelly/maildev
+    ports:
+      - "8000:80"
+
+volumes:
+  mysql:
